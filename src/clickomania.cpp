@@ -70,12 +70,14 @@ Grid::Grid(int x, int y, int k, vector<string>& board) {
     this->board = board;    
     updateBoard();
     vector<vector<Pair> > parent;
-    //unordered_set<Pair> blocks;
+    set<Pair> blocks;
     for (int i = 0; i < board.size(); i++) {
         vector<Pair> row;
         for (int j = 0; j < board[i].size(); j++) {
             struct Pair point = {i, j};
-            if (board[i][j] != '-') blocks.insert(point);
+            if (this->board[i][j] != '-') {
+                blocks.insert(point);
+            }
             row.push_back(point);
         }
         parent.push_back(row);
@@ -125,12 +127,22 @@ void Grid::createDisjoint() {
         for (int j = 0; j < board[i].size(); j++) {
             if (board[i][j] != '-') {
                 if (j < board[i].size()-1 && board[i][j] == board[i][j+1]) {
-                    blocks.erase(parent[i][j+1]);
-                    parent[i][j+1] = parent[i][j];
-                } 
+                    if (parent[i][j+1].row != i || parent[i][j+1].col != j+1) {
+                        blocks.erase(parent[i][j]);
+                        parent[i][j] = parent[i][j+1];
+                    } else {
+                        blocks.erase(parent[i][j+1]);
+                        parent[i][j+1] = parent[i][j];
+                    }
+                }
                 if (i < board.size()-1 && board[i][j] == board[i+1][j]) {
-                    blocks.erase(parent[i][j+1]);
-                    parent[i+1][j] = parent[i][j];
+                    if (parent[i+1][j].row != i+1 || parent[i+1][j].col != j) {
+                        blocks.erase(parent[i][j]);
+                        parent[i][j] = parent[i+1][j];
+                    } else {
+                        blocks.erase(parent[i+1][j]);
+                        parent[i+1][j] = parent[i][j];
+                    }
                 }
             }
         }
@@ -147,8 +159,9 @@ void Grid::printBoard() {
 void Grid::printParents() {
     for (int i = 0; i < parent.size(); i++) {
         for (int j = 0; j < parent[i].size(); j++) {
-            cout << parent[i][j].col << parent[i][j].row << "\n";
+            cout << parent[i][j].row << parent[i][j].col << " ";
         }
+        cout << "\n";
     }
 }
 

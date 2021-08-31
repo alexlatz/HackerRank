@@ -1,17 +1,19 @@
 #include <vector>
 #include <string>
-#include <unordered_set>
+#include <set>
 
 using namespace std;
 class Grid {
+    public:
     struct Pair {int row; int col;
-    bool operator== (const Pair p) {
-        return p.col == this->col && p.row == this->row;
+    bool operator< (const Pair& p) const {
+        return p.row == this->row ? this->col < p.col : this->row < p.row;
     }};
+    private:
     int x, y, k;
     vector<string> board;
     vector<vector<Pair> > parent;
-    unordered_set<Pair> blocks;
+    set<Pair> blocks;
     public: 
         Grid(int x, int y, int k, vector<string>& board);
         void updateBoard();
