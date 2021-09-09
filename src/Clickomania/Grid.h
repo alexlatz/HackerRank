@@ -19,13 +19,17 @@ class Grid {
         vector<string> board;
         vector<vector<Pair> > parent;
         set<Pair> blocks;
+        bool disjointCreated;
     public: 
         Grid(vector<string>& board);
+        Grid();
+        Grid(Grid& original);
+        void prepareBlocks();
         void updateBoard();
         void printBoard();
         void printParents();
         void createDisjoint();
-        Grid removeSet(Pair p);
+        Grid& removeSet(Pair p);
         int getNumBlocks() {return this->numBlocks;}
-        set<Pair>& getBlocks() {return this->blocks;}
+        set<Pair>& getBlocks();
 };

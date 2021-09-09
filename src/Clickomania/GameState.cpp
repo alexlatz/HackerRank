@@ -1,7 +1,8 @@
 #include "GameState.h"
 
-GameState::GameState(Grid grid, GameState* parent, int moves) {
-    this->grid = grid;
+GameState::GameState(Grid& grid, GameState* parent, int moves) {
+    Grid newGrid(grid);
+    this->grid = newGrid;
     this->parent = parent;
     this->moves = moves;
 }
@@ -14,4 +15,8 @@ vector<GameState>& GameState::getChildren() {
         }
     }
     return children;
+}
+
+Grid& GameState::getGrid() {
+    return this->grid;
 }

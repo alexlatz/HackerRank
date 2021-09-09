@@ -64,15 +64,19 @@ The maximum scores for the testcases of this challenge are 10, 15, 25, and 30. H
 #include <fstream>
 #include <queue>
 
-priority_queue<GameState, vector<GameState>, greater<GameState> > pq;
 
-void nextMove() {
-
-}
-
-void calcMove(GameState start) {
-    GameState best = pq.top();
-    pq.pop();
+void nextMove(int x, int y, int k, vector<string> board) {
+    Grid grid(board);
+    priority_queue<GameState, vector<GameState>, greater<GameState> > pq;
+    GameState start(grid, nullptr, 0); 
+    pq.push(start);
+    while (!pq.top().getGrid().getBlocks().empty()) {
+        GameState best = pq.top();
+        pq.pop();
+        for (GameState child : best.getChildren()) {
+            pq.push(child);
+        }
+    }
 }
 
 int main(int argc, char const *argv[])

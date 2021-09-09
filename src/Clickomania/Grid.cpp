@@ -4,6 +4,22 @@
 Grid::Grid(vector<string>& board) {
     this->board = board;    
     updateBoard();
+    prepareBlocks();
+    this->disjointCreated = false;
+}
+
+Grid::Grid(Grid& original) {
+    vector<string> newBoard(original.board);
+    vector<vector<Pair> > newParent(original.parent); 
+    set<Pair> newBlocks(original.blocks);
+    this->board = newBoard;
+    this->parent = newParent;
+    this->blocks = newBlocks;
+    this->numBlocks = original.numBlocks;
+    this->disjointCreated = original.disjointCreated; 
+}
+
+void Grid::prepareBlocks() {
     vector<vector<Pair> > parent;
     set<Pair> blocks;
     int numBlocks = 0;
@@ -19,10 +35,9 @@ Grid::Grid(vector<string>& board) {
         }
         parent.push_back(row);
     }
-    this->parent = parent;
     this->blocks = blocks;
+    this->parent = parent;
     this->numBlocks = numBlocks;
-    createDisjoint();
 }
 
 void Grid::updateBoard() {
@@ -87,7 +102,7 @@ void Grid::createDisjoint() {
     }
 }
 
-Grid Grid::removeSet(Grid::Pair p) {
+Grid& Grid::removeSet(Grid::Pair p) {
     vector<string> newBoard(board);
     for (int i = 0; i < newBoard.size(); i++) {
         for (int j = 0; j < newBoard[i].size(); j++) {
@@ -96,6 +111,14 @@ Grid Grid::removeSet(Grid::Pair p) {
     }
     Grid newGrid(newBoard);
     return newGrid;
+}
+
+set<Grid::Pair>& Grid::getBlocks() {
+    if (!disjointCreated) {
+        createDisjoint();
+        disjointCreated = true;
+    }
+    return this->blocks;
 }
 
 void Grid::printBoard() {
