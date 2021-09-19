@@ -59,31 +59,38 @@ if count ≥ 20, a nominal score of 0.01 would be given.
 
 The maximum scores for the testcases of this challenge are 10, 15, 25, and 30. Hence you can get a total score of 80.
 */
-#include "Grid.h"
 #include "GameState.h"
 #include <fstream>
 #include <queue>
+#include <iostream>
 
 
 void nextMove(int x, int y, int k, vector<string> board) {
     Grid grid(board);
-    priority_queue<GameState, vector<GameState>, greater<GameState> > pq;
-    GameState start(grid, nullptr, 0); 
+    priority_queue<GameState, vector<GameState>, greater<> > pq;
+    GameState start(grid, nullptr,  0);
     pq.push(start);
-    while (!pq.top().getGrid().getBlocks().empty()) {
+    while (!pq.top().getBoardFinished()) {
         GameState best = pq.top();
+        GameState *keep = new GameState(best);
         pq.pop();
-        for (GameState child : best.getChildren()) {
+        for (const GameState& child: keep->getChildren()) {
             pq.push(child);
         }
     }
+    GameState chosen = pq.top();
+    chosen.getGrid().printBoard();
+    while (chosen.getParent()->getParent() != nullptr) {
+        chosen = *(chosen.getParent());
+    }
+    cout << chosen.getBoardFinished() << endl;
 }
 
 int main(int argc, char const *argv[])
 {
     ifstream infile;
-    infile.open("input.txt");
-    int x, y, k;
+    infile.open("input2.txt");
+    int x = 0, y = 0, k = 0;
     infile >> x >> y >> k;
     vector<string> board;
     for (int i = 0; i < x; i++) {
@@ -91,9 +98,7 @@ int main(int argc, char const *argv[])
         infile >> s;
         board.push_back(s);
     }
-    Grid grid(board);
-    GameState start(grid, nullptr, 0);
-    pq.push(start);
+    nextMove(x, y, k, board);
     infile.close();
     return 0;
 }

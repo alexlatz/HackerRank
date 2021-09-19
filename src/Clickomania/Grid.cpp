@@ -1,22 +1,22 @@
 #include "Grid.h"
 #include <iostream>
+#include <utility>
 
-Grid::Grid(vector<string>& board) {
-    this->board = board;    
+Grid::Grid(vector<string> board) {
+    this->board = board;
     updateBoard();
     prepareBlocks();
     this->disjointCreated = false;
 }
 
-Grid::Grid(Grid& original) {
-    vector<string> newBoard(original.board);
-    vector<vector<Pair> > newParent(original.parent); 
-    set<Pair> newBlocks(original.blocks);
-    this->board = newBoard;
-    this->parent = newParent;
-    this->blocks = newBlocks;
+Grid::Grid(Grid& original) : board(original.board), parent(original.parent),  blocks(original.blocks) {
     this->numBlocks = original.numBlocks;
-    this->disjointCreated = original.disjointCreated; 
+    this->disjointCreated = original.disjointCreated;
+}
+
+Grid::Grid(const Grid& original) : board(original.board), parent(original.parent), blocks(original.blocks) {
+    this->numBlocks = original.numBlocks;
+    this->disjointCreated = original.disjointCreated;
 }
 
 void Grid::prepareBlocks() {
@@ -79,7 +79,7 @@ void Grid::createDisjoint() {
     for (int i = 0; i < board.size(); i++) {
         for (int j = 0; j < board[i].size(); j++) {
             if (board[i][j] != '-') {
-                if (j < board[i].size()-1 && board[i][j] == board[i][j+1]) {
+                if (j < board[i].size()-1 && board[i][j] == board[i][j+1] && !(parent[i][j] == parent[i][j+1])) {
                     if (parent[i][j+1].row != i || parent[i][j+1].col != j+1) {
                         blocks.erase(parent[i][j]);
                         parent[i][j] = parent[i][j+1];
@@ -88,7 +88,7 @@ void Grid::createDisjoint() {
                         parent[i][j+1] = parent[i][j];
                     }
                 }
-                if (i < board.size()-1 && board[i][j] == board[i+1][j]) {
+                if (i < board.size()-1 && board[i][j] == board[i+1][j] && !(parent[i][j] == parent[i+1][j])) {
                     if (parent[i+1][j].row != i+1 || parent[i+1][j].col != j) {
                         blocks.erase(parent[i][j]);
                         parent[i][j] = parent[i+1][j];
@@ -102,7 +102,7 @@ void Grid::createDisjoint() {
     }
 }
 
-Grid& Grid::removeSet(Grid::Pair p) {
+Grid Grid::removeSet(Grid::Pair p) {
     vector<string> newBoard(board);
     for (int i = 0; i < newBoard.size(); i++) {
         for (int j = 0; j < newBoard[i].size(); j++) {

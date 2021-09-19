@@ -1,10 +1,15 @@
 #include "GameState.h"
 
-GameState::GameState(Grid& grid, GameState* parent, int moves) {
-    Grid newGrid(grid);
-    this->grid = newGrid;
+GameState::GameState(Grid grid, GameState* parent, int moves) : grid(grid) {
     this->parent = parent;
     this->moves = moves;
+    this->boardFinished = this->grid.getBlocks().empty();
+}
+
+GameState::GameState(const GameState& original) : grid(original.grid) {
+    this->parent = original.parent;
+    this->moves = original.moves;
+    this->boardFinished = this->grid.getBlocks().empty();
 }
 
 vector<GameState>& GameState::getChildren() {
