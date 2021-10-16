@@ -15,3 +15,4 @@ SET(TARGET_SRC
 
 
 add_executable(Clickomania clickomania.cpp ${TARGET_SRC} ${TARGET_H})
+add_executable(Clickomania_singlefile singlefile.cpp singlefile.cpp)

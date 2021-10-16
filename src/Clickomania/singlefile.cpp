@@ -1,6 +1,72 @@
-#include "Grid.h"
+#include <cmath>
+#include <cstdio>
+#include <vector>
 #include <iostream>
+#include <algorithm>
+#include <queue>
+#include <set>
+#include <string>
 
+using namespace std;
+class Grid {
+public:
+    struct Pair {
+        int row; int col;
+        bool operator< (const Pair& p) const {
+            return p.row == this->row ? this->col < p.col : this->row < p.row;
+        }
+        bool operator== (const Pair& p) const {
+            return p.row == this->row && p.col == this->col;
+        }
+    };
+private:
+    int numBlocks{};
+    vector<string> board;
+    vector<vector<Pair> > parent;
+    set<Pair> blocks;
+    set<Pair> uniqueBlocks;
+    bool disjointCreated;
+public:
+    Grid(vector<string>& board);
+    Grid(Grid& original);
+    Grid(const Grid& original);
+    void prepareBlocks();
+    void updateBoard();
+    void printBoard();
+    void printParents();
+    void createDisjoint();
+    Grid removeSet(Pair p);
+    int getNumBlocks() const {return this->numBlocks;}
+    const int getNumUniqueBlocks() const {return this->uniqueBlocks.size();}
+    set<Pair>& getBlocks();
+    set<Pair>& getUniqueBlocks();
+};
+class GameState {
+    Grid grid;
+    GameState* parent;
+    int moves;
+    vector<GameState> children;
+    bool boardFinished;
+    Grid::Pair lastRemoved;
+public:
+    GameState(Grid grid, GameState* parent, int moves, Grid::Pair lastRemoved);
+    GameState(const GameState& original);
+    vector<GameState>& getChildren();
+    Grid& getGrid();
+    bool operator> (const GameState& g) const  {
+        return this->grid.getNumUniqueBlocks() >  g.grid.getNumUniqueBlocks();
+    }
+    [[nodiscard]] bool getBoardFinished() const {
+        return this->boardFinished;
+    }
+    GameState* getParent() {
+        return this->parent;
+    }
+    int getMoves() {
+        return this->moves;
+    }
+    Grid::Pair getLastRemoved() { return this->lastRemoved; }
+};
 Grid::Grid(vector<string>& board) {
     this->board = board;
     updateBoard();
@@ -8,12 +74,12 @@ Grid::Grid(vector<string>& board) {
     this->disjointCreated = false;
 }
 
-Grid::Grid(Grid& original) : board(original.board), parent(original.parent),  blocks(original.blocks), uniqueBlocks(original.uniqueBlocks){
+Grid::Grid(Grid& original) : board(original.board), parent(original.parent),  blocks(original.blocks) {
     this->numBlocks = original.numBlocks;
     this->disjointCreated = original.disjointCreated;
 }
 
-Grid::Grid(const Grid& original) : board(original.board), parent(original.parent), blocks(original.blocks), uniqueBlocks(original.uniqueBlocks) {
+Grid::Grid(const Grid& original) : board(original.board), parent(original.parent), blocks(original.blocks) {
     this->numBlocks = original.numBlocks;
     this->disjointCreated = original.disjointCreated;
 }
@@ -59,14 +125,16 @@ void Grid::updateBoard() {
             }
         }
     }
-    for (int j = board[0].size()-1; j >= 0; j--) {
+    for (int j = 0; j < board[0].size(); j++) {
+        bool shift = false;
         for (int i = 0; i < board.size(); i++) {
             if (board[i][j] != '-') break;
-            else if (i == board.size()-1) {
-                for (int k = 0; k < board.size(); k++) {
-                    string newLine = board[k].substr(0, j) + board[k].substr(j+1) + '-';
-                    board[k].swap(newLine);
-                }
+            else if (i == board.size()-1) shift = true;
+        }
+        if (shift) {
+            for (int i = 0; i < board.size(); i++) {
+                string newLine = board[i].substr(0, j) + board[i].substr(j+1) + '-';
+                board[i].swap(newLine);
             }
         }
     }
@@ -142,4 +210,68 @@ void Grid::printParents() {
 
 set<Grid::Pair>& Grid::getUniqueBlocks() {
     return this->uniqueBlocks;
+}
+GameState::GameState(Grid grid, GameState* parent, int moves, Grid::Pair lastRemoved) : grid(grid) {
+    this->parent = parent;
+    this->moves = moves;
+    this->lastRemoved = lastRemoved;
+    this->boardFinished = this->grid.getBlocks().empty();
+}
+
+GameState::GameState(const GameState& original) : grid(original.grid) {
+    this->parent = original.parent;
+    this->moves = original.moves;
+    this->lastRemoved = original.lastRemoved;
+    this->boardFinished = this->grid.getBlocks().empty();
+}
+
+vector<GameState>& GameState::getChildren() {
+    if (children.empty()) {
+        for (Grid::Pair p : grid.getBlocks()) {
+            GameState newState(grid.removeSet(p), this, this->moves+1, p);
+            children.push_back(newState);
+        }
+    }
+    return children;
+}
+
+Grid& GameState::getGrid() {
+    return this->grid;
+}
+
+
+void nextMove(int x, int y, int k, vector<string> board) {
+    Grid grid(board);
+    priority_queue<GameState, vector<GameState>, greater<GameState> > pq;
+    GameState start(grid, nullptr,  0, (Grid::Pair){-1, -1});
+    if (start.getBoardFinished()) cout << -1 << -1 << endl;
+    pq.push(start);
+    while (!pq.top().getBoardFinished()) {
+        GameState *best = new GameState(pq.top());
+        pq.pop();
+        for (const GameState& child: best->getChildren()) {
+            pq.push(child);
+        }
+    }
+    GameState chosen = pq.top();
+    while (chosen.getParent()->getParent() != nullptr) {
+        chosen = *(chosen.getParent());
+    }
+    cout << chosen.getLastRemoved().row << " " << chosen.getLastRemoved().col << endl;
+}
+
+int main(int argc, char const *argv[])
+{
+    freopen("sample.txt", "r", stdin);
+    freopen("output.txt", "w", stdout);
+    int x = 0, y = 0, k = 0;
+    cin >> x >> y >> k;
+    vector<string> board;
+    for (int i = 0; i < x; i++) {
+        string s;
+        cin >> s;
+        board.push_back(s);
+    }
+    nextMove(x, y, k, board);
+    return 0;
 }

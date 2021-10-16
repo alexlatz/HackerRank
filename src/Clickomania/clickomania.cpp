@@ -67,23 +67,22 @@ The maximum scores for the testcases of this challenge are 10, 15, 25, and 30. H
 
 void nextMove(int x, int y, int k, vector<string> board) {
     Grid grid(board);
-    priority_queue<GameState, vector<GameState>, greater<> > pq;
-    GameState start(grid, nullptr,  0);
+    priority_queue<GameState, vector<GameState>, greater<GameState> > pq;
+    GameState start(grid, nullptr,  0, (Grid::Pair){-1, -1});
+    if (start.getBoardFinished()) cout << -1 << -1 << endl;
     pq.push(start);
-    while (!pq.top().getBoardFinished()) {
-        GameState best = pq.top();
-        GameState *keep = new GameState(best);
+    while (!pq.top().getBoardFinished() && pq.top().getUniqueNum() > 0) {
+        GameState *best = new GameState(pq.top());
         pq.pop();
-        for (const GameState& child: keep->getChildren()) {
+        for (const GameState& child: best->getChildren()) {
             pq.push(child);
         }
     }
     GameState chosen = pq.top();
-    chosen.getGrid().printBoard();
     while (chosen.getParent()->getParent() != nullptr) {
         chosen = *(chosen.getParent());
     }
-    cout << chosen.getBoardFinished() << endl;
+    cout << chosen.getLastRemoved().row << " " << chosen.getLastRemoved().col << endl;
 }
 
 int main(int argc, char const *argv[])
@@ -98,7 +97,11 @@ int main(int argc, char const *argv[])
         infile >> s;
         board.push_back(s);
     }
-    nextMove(x, y, k, board);
+    Grid grid(board);
+    grid.createDisjoint();
+    grid.printBoard();
+    grid.printParents();
+    //nextMove(x, y, k, board);
     infile.close();
     return 0;
 }
